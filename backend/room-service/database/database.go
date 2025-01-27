@@ -10,11 +10,11 @@ import (
 
 var DB *gorm.DB
 
-func ConnectDatabase() {
+func ConnectDatabase(dbPath string) {
 	var err error
-	DB, err = gorm.Open(sqlite.Open("data/room.db"), &gorm.Config{})
+	DB, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 	if err != nil {
-		utils.Log.WithField("error", err.Error()).Error("Failed to connect to database:")
+		utils.Log.WithField("error", err.Error()).Error("Failed to connect to database")
 	}
 
 	utils.Log.Info("Room database connected successfully!")
@@ -22,6 +22,6 @@ func ConnectDatabase() {
 	// Migrate the schema for Room
 	err = DB.AutoMigrate(&models.Room{})
 	if err != nil {
-		utils.Log.WithField("error", err.Error()).Error("Failed to connect to database:")
+		utils.Log.WithField("error", err.Error()).Error("Failed to connect to database")
 	}
 }
