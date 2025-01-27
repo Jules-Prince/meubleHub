@@ -2,7 +2,7 @@ package database
 
 import (
 	"context"
-	"fmt"
+	"hexagone/object-service/utils"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -20,8 +20,7 @@ func ConnectDatabase() {
 	// Test the connection
 	_, err := RDB.Ping(Ctx).Result()
 	if err != nil {
-		fmt.Println("Failed to connect to DragonflyDB:", err)
+		utils.Log.WithField("error", err.Error()).Error("Failed to connect to DragonflyDB:")
 	}
-
-	fmt.Println("DragonflyDB connected successfully!")
+	utils.Log.Info("DragonflyDB connected successfully!")
 }
