@@ -2,7 +2,7 @@ package database
 
 import (
 	"hexagone/home-service/models"
-	"log"
+	"hexagone/home-service/utils"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -10,18 +10,19 @@ import (
 
 var DB *gorm.DB
 
+
 func ConnectDatabase() {
 	var err error
-	DB, err = gorm.Open(sqlite.Open("data/home.db"), &gorm.Config{})
+	DB, err = gorm.Open(sqlite.Open("data/room.db"), &gorm.Config{})
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		utils.Log.WithField("error", err.Error()).Error("Failed to connect to database")
 	}
 
-	log.Println("Home database connected successfully!")
+	utils.Log.Info("Room database connected successfully!")
 
-	// Migrate the schema
+	// Migrate the schema for Room
 	err = DB.AutoMigrate(&models.Home{})
 	if err != nil {
-		log.Fatal("Failed to migrate home database:", err)
+		utils.Log.WithField("error", err.Error()).Error("Failed to connect to database")
 	}
 }
