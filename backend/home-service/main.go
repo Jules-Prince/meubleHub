@@ -30,10 +30,7 @@ func main() {
 
 	// Initialize logger
 	utils.InitLogger()
-
-	// Log the loaded configurations
-	utils.Log.Infof("Starting Home Service on port %s with DB at %s", port, dbPath)
-
+	
 	// Initialize database
 	database.ConnectDatabase(dbPath)
 
