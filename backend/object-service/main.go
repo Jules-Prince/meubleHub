@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"hexagone/object-service/database"
 	"hexagone/object-service/services"
 	"hexagone/object-service/utils"
@@ -37,6 +38,8 @@ func main() {
 
 
 	// Start the service
-	utils.Log.Info("Starting HTTP server on port 8083")
-	r.Run(":8083") // Different port for the object service
+	utils.Log.Infof("Starting HTTP server on port %s", port)
+	if err := r.Run(fmt.Sprintf(":%s", port)); err != nil {
+		utils.Log.Fatalf("Failed to start server: %v", err)
+	}
 }

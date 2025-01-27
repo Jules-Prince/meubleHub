@@ -45,8 +45,7 @@ func main() {
 	r.POST("/homes", services.CreateHome)
 	r.GET("/homes", services.ListHomes)
 
-	utils.Log.Info("Starting HTTP server on port 8080")
-
+	utils.Log.Infof("Starting HTTP server on port %s", port)
 
 	// Start the server
 	if err := r.Run(fmt.Sprintf(":%s", port)); err != nil {
