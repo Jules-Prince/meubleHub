@@ -2,7 +2,9 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"hexagone/object-service/utils"
+	"os"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -11,10 +13,16 @@ var RDB *redis.Client
 var Ctx = context.Background()
 
 func ConnectDatabase() {
+
+	host := os.Getenv("DRAGONFLY_HOST")
+	port := os.Getenv("DRAGONFLY_PORT")
+
+	if host == "" || port == "" {
+		utils.Log.Fatal("DRAGONFLY_HOST or DRAGONFLY_PORT is not set in the environment variables")
+	}
+
 	RDB = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379", // DragonflyDB host and port
-		Password: "",               // No password by default
-		DB:       0,                // Default DB
+		Addr: fmt.Sprintf("%s:%s", host, port),
 	})
 
 	// Test the connection

@@ -4,11 +4,22 @@ import (
 	"hexagone/object-service/database"
 	"hexagone/object-service/services"
 	"hexagone/object-service/utils"
+	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		utils.Log.Error("Warning: No .env file found")
+	}
+	
+	port := os.Getenv("PORT")
+	if port == "" {
+		utils.Log.Error("PORT is not set in the environment variables")
+	}
+
 	utils.InitLogger()
 	utils.Log.Info("Starting Object Service")
 	
