@@ -2,7 +2,7 @@ package database
 
 import (
 	"hexagone/user-service/models"
-	"log"
+	"hexagone/user-service/utils"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -10,18 +10,19 @@ import (
 
 var DB *gorm.DB
 
+
 func ConnectDatabase() {
 	var err error
-	DB, err = gorm.Open(sqlite.Open("data/user.db"), &gorm.Config{})
+	DB, err = gorm.Open(sqlite.Open("data/usrer.db"), &gorm.Config{})
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		utils.Log.WithField("error", err.Error()).Error("Failed to connect to database")
 	}
 
-	log.Println("Database connected successfully!")
+	utils.Log.Info("Room database connected successfully!")
 
-	// Migrate the schema
+	// Migrate the schema for Room
 	err = DB.AutoMigrate(&models.User{})
 	if err != nil {
-		log.Fatal("Failed to migrate database:", err)
+		utils.Log.WithField("error", err.Error()).Error("Failed to connect to database")
 	}
 }

@@ -4,6 +4,8 @@ go 1.23.5
 
 require github.com/redis/go-redis/v9 v9.7.0
 
+require github.com/sirupsen/logrus v1.9.3 // indirect
+
 require (
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
