@@ -21,7 +21,10 @@ func main() {
 	utils.Log.Info("Starting Object Service")
 	
 	// Connect to DragonflyDB
-	database.ConnectDatabase()
+	err := database.ConnectDatabase()
+	if(err != nil) {
+		return
+	}
 	utils.Log.Info("Connected to DragonflyDB")
 
 	r := gin.Default()

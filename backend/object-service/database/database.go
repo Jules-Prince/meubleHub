@@ -12,7 +12,7 @@ import (
 var RDB *redis.Client
 var Ctx = context.Background()
 
-func ConnectDatabase() {
+func ConnectDatabase() error {
 
 	host := os.Getenv("DRAGONFLY_HOST")
 	port := os.Getenv("DRAGONFLY_PORT")
@@ -29,6 +29,9 @@ func ConnectDatabase() {
 	_, err := RDB.Ping(Ctx).Result()
 	if err != nil {
 		utils.Log.WithField("error", err.Error()).Error("Failed to connect to DragonflyDB:")
-	}
+		return err
+	} 
 	utils.Log.Info("DragonflyDB connected successfully!")
+	
+	return nil
 }
