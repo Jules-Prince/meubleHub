@@ -2,9 +2,9 @@ package services
 
 import (
 	"encoding/json"
-	"hexagone/object-service/database"
-	"hexagone/object-service/models"
-	"hexagone/object-service/utils"
+	"hexagone/object-service/src/database"
+	"hexagone/object-service/src/models"
+	"hexagone/object-service/src/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

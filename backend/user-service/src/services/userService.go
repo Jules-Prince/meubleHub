@@ -1,9 +1,9 @@
 package services
 
 import (
-	"hexagone/user-service/database"
-	"hexagone/user-service/models"
-	"hexagone/user-service/utils"
+	"hexagone/user-service/src/database"
+	"hexagone/user-service/src/models"
+	"hexagone/user-service/src/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

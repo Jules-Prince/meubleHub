@@ -1,9 +1,9 @@
 package services
 
 import (
-	"hexagone/home-service/database"
-	"hexagone/home-service/models"
-	"hexagone/home-service/utils"
+	"hexagone/home-service/src/database"
+	"hexagone/home-service/src/models"
+	"hexagone/home-service/src/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
-	"hexagone/object-service/utils"
+	"hexagone/object-service/src/utils"
 	"os"
 
 	"github.com/redis/go-redis/v9"

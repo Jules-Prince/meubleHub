@@ -7,9 +7,12 @@ COPY go.mod go.sum ./
 
 RUN go mod tidy
 
-COPY . .
+COPY ./src ./src
 
-RUN go build -o main .
+COPY go.mod go.mod
+COPY go.sum go.sum
+
+RUN go build -o main ./src
 
 # Stage 2: Create the final image
 FROM alpine:latest
