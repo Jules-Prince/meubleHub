@@ -12,14 +12,14 @@ COPY ./src ./src
 COPY go.mod go.mod
 COPY go.sum go.sum
 
+RUN go test -v ./src/...
+
 RUN go build -o main ./src
 
-# Stage 2: Create the final image
 FROM alpine:latest
 
 WORKDIR /root/
 
-# Copy the binary from the builder image
 COPY --from=builder /app/main .
 
 EXPOSE ${PORT}
