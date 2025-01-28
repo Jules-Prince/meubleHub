@@ -8,14 +8,9 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	// Load environment variables from .env file
-	if err := godotenv.Load(); err != nil {
-		utils.Log.Error("Warning: No .env file found")
-	}
 
 	// Get configuration from environment variables
 	port := os.Getenv("PORT")

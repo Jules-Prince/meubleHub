@@ -8,13 +8,9 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		utils.Log.Error("Warning: No .env file found")
-	}
 	
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -25,7 +21,10 @@ func main() {
 	utils.Log.Info("Starting Object Service")
 	
 	// Connect to DragonflyDB
-	database.ConnectDatabase()
+	err := database.ConnectDatabase()
+	if(err != nil) {
+		return
+	}
 	utils.Log.Info("Connected to DragonflyDB")
 
 	r := gin.Default()
