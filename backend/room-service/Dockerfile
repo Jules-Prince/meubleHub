@@ -5,15 +5,15 @@ RUN apk add --no-cache gcc musl-dev sqlite-dev
 WORKDIR /app
 
 COPY go.mod go.sum ./
-
 RUN go mod tidy
 
 COPY ./src ./src
-
 COPY go.mod go.mod
 COPY go.sum go.sum
 
 ENV CGO_ENABLED=1
+
+RUN go test -v ./src/...
 
 RUN go build -o /app/main ./src
 
