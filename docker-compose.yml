@@ -1,0 +1,71 @@
+version: "3.8"
+
+services:
+  home-service:
+    build:
+      context: ./backend/home-service
+    image: hexagon/home-service:v0.1
+    ports:
+      - ${HOME_PORT}:${HOME_PORT}
+    environment:
+      - PORT=${HOME_PORT}
+      - DB_PATH=${HOME_DB_PATH}
+    volumes:
+      - ./backend/home-service/data:/app/data
+
+  object-service:
+    build:
+      context: ./backend/object-service
+    image: hexagon/object-service:v0.1
+    ports: 
+      - ${OBJECT_PORT}:${OBJECT_PORT}
+    environment:
+      - PORT=${OBJECT_PORT}
+      - DRAGONFLY_HOST=${OBJECT_DRAGONFLY_HOST}
+      - DRAGONFLY_PORT=${OBJECT_DRAGONFLY_PORT}
+    depends_on:
+      - dragonfly
+    networks:
+      - app-network
+
+  room-service:
+    build:
+      context: ./backend/room-service
+    image: hexagon/room-service:v0.1
+    ports:
+      - ${ROOM_PORT}:${ROOM_PORT}
+    environment:
+      - PORT=${ROOM_PORT}
+      - DB_PATH=${ROOM_DB_PATH}
+    volumes:
+      - ./backend/room-service/data:/app/data
+
+  user-service:
+    build:
+      context: ./backend/user-service
+    image: hexagon/user-service:v0.1
+    ports:
+      - ${USER_PORT}:${USER_PORT}
+    environment:
+      - PORT=${USER_PORT}
+      - DB_PATH=${USER_DB_PATH}
+    volumes:
+      - ./backend/user-service/data:/app/data
+
+  dragonfly:
+    image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
+    ulimits:
+      memlock: -1
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  app-network:
+    driver: bridge
