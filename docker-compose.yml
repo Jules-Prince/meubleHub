@@ -1,0 +1,107 @@
+version: "3.8"
+
+services:
+  home-service:
+    build:
+      context: ./backend/home-service
+      dockerfile: Dockerfile
+    image: hexagon/home-service:v0.1
+    ports:
+      - "${HOME_PORT}:${HOME_PORT}"
+    environment:
+      - PORT=${HOME_PORT}
+      - FRONTEND_PORT=${FRONTEND_PORT}
+      - DB_PATH=${HOME_DB_PATH}
+    volumes:
+      - ./backend/home-service/data:/app/data
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  object-service:
+    build:
+      context: ./backend/object-service
+      dockerfile: Dockerfile
+    image: hexagon/object-service:v0.1
+    ports:
+      - "${OBJECT_PORT}:${OBJECT_PORT}"
+    environment:
+      - PORT=${OBJECT_PORT}
+      - FRONTEND_PORT=${FRONTEND_PORT}
+      - DRAGONFLY_HOST=dragonfly
+      - DRAGONFLY_PORT=6379
+    depends_on:
+      dragonfly:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  room-service:
+    build:
+      context: ./backend/room-service
+      dockerfile: Dockerfile
+    image: hexagon/room-service:v0.1
+    ports:
+      - "${ROOM_PORT}:${ROOM_PORT}"
+    environment:
+      - PORT=${ROOM_PORT}
+      - FRONTEND_PORT=${FRONTEND_PORT}
+      - DB_PATH=${ROOM_DB_PATH}
+    volumes:
+      - ./backend/room-service/data:/app/data
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  user-service:
+    build:
+      context: ./backend/user-service
+      dockerfile: Dockerfile
+    image: hexagon/user-service:v0.1
+    ports:
+      - "${USER_PORT}:${USER_PORT}"
+    environment:
+      - PORT=${USER_PORT}
+      - FRONTEND_PORT=${FRONTEND_PORT}
+      - DB_PATH=${USER_DB_PATH}
+    volumes:
+      - ./backend/user-service/data:/app/data
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: hexagon/frontend:v0.1
+    ports:
+      - "${FRONTEND_PORT}:80"  # Note: changed to 80 because Nginx uses port 80
+    networks:
+      - app-network
+    depends_on:
+      - home-service
+      - object-service
+      - room-service
+      - user-service
+    restart: unless-stopped
+
+  dragonfly:
+    image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
+    ulimits:
+      memlock: -1
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
