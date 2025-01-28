@@ -1,0 +1,351 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>database: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">hexagone/user-service/src/database/database.go (75.0%)</option>
+				
+				<option value="file1">hexagone/user-service/src/main.go (0.0%)</option>
+				
+				<option value="file2">hexagone/user-service/src/services/userService.go (87.2%)</option>
+				
+				<option value="file3">hexagone/user-service/src/utils/logger.go (100.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package database
+
+import (
+        "hexagone/user-service/src/models"
+        "hexagone/user-service/src/utils"
+
+        "gorm.io/driver/sqlite"
+        "gorm.io/gorm"
+)
+
+var DB *gorm.DB
+
+
+func ConnectDatabase(dbPath string) <span class="cov8" title="1">{
+        var err error
+        DB, err = gorm.Open(sqlite.Open(dbPath), &amp;gorm.Config{})
+        if err != nil </span><span class="cov0" title="0">{
+                utils.Log.WithField("error", err.Error()).Error("Failed to connect to database")
+        }</span>
+
+        <span class="cov8" title="1">utils.Log.Info("Room database connected successfully!")
+
+        // Migrate the schema for Room
+        err = DB.AutoMigrate(&amp;models.User{})
+        if err != nil </span><span class="cov0" title="0">{
+                utils.Log.WithField("error", err.Error()).Error("Failed to connect to database")
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package main
+
+import (
+        "fmt"
+        "hexagone/user-service/src/database"
+        "hexagone/user-service/src/services"
+        "hexagone/user-service/src/utils"
+        "os"
+
+        "github.com/gin-gonic/gin"
+)
+
+func main() <span class="cov0" title="0">{
+
+        // Get configuration from environment variables
+        port := os.Getenv("PORT")
+        if port == "" </span><span class="cov0" title="0">{
+                utils.Log.Error("PORT is not set in the environment variables")
+        }</span>
+
+        <span class="cov0" title="0">dbPath := os.Getenv("DB_PATH")
+        if dbPath == "" </span><span class="cov0" title="0">{
+                utils.Log.Error("DB_PATH is not set in the environment variables")
+        }</span>
+        
+        <span class="cov0" title="0">utils.InitLogger()
+        utils.Log.Info("Starting User service")
+
+        // Connect to the database
+        database.ConnectDatabase(dbPath)
+        utils.Log.Info("Connected to SQLite")
+
+        r := gin.Default()
+
+        // Routes
+        r.POST("/users", services.CreateUser)  // Create a user
+        r.POST("/login", services.Login)       // Login
+        r.GET("/users", services.ListUsers)    // List all users
+
+        utils.Log.Infof("Starting HTTP server on port %s", port)
+
+        // Start the server
+        if err := r.Run(fmt.Sprintf(":%s", port)); err != nil </span><span class="cov0" title="0">{
+                utils.Log.Fatalf("Failed to start server: %v", err)
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package services
+
+import (
+        "hexagone/user-service/src/database"
+        "hexagone/user-service/src/models"
+        "hexagone/user-service/src/utils"
+        "net/http"
+
+        "github.com/gin-gonic/gin"
+        "github.com/sirupsen/logrus"
+        "golang.org/x/crypto/bcrypt"
+)
+
+type CreateUserInput struct {
+        Username string `json:"username" binding:"required"`
+        Email    string `json:"email" binding:"required,email"`
+        Password string `json:"password" binding:"required"`
+}
+
+type LoginInput struct {
+        Email    string `json:"email" binding:"required,email"`
+        Password string `json:"password" binding:"required"`
+}
+
+// HashPassword hashes a password using bcrypt
+func HashPassword(password string) (string, error) <span class="cov8" title="1">{
+        utils.Log.Info("Hashing password")
+        bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+        if err != nil </span><span class="cov0" title="0">{
+                utils.Log.WithFields(logrus.Fields{
+                        "error": err.Error(),
+                }).Error("Failed to hash password")
+        }</span>
+        <span class="cov8" title="1">return string(bytes), err</span>
+}
+
+// CreateUser handles the creation of a new user
+func CreateUser(c *gin.Context) <span class="cov8" title="1">{
+        var input CreateUserInput
+        if err := c.ShouldBindJSON(&amp;input); err != nil </span><span class="cov8" title="1">{
+                utils.Log.WithFields(logrus.Fields{
+                        "error": err.Error(),
+                }).Error("Error binding JSON in CreateUser")
+                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }</span>
+
+        <span class="cov8" title="1">utils.Log.WithFields(logrus.Fields{
+                "username": input.Username,
+                "email":    input.Email,
+        }).Info("Creating user")
+
+        // Hash the password
+        hashedPassword, err := HashPassword(input.Password)
+        if err != nil </span><span class="cov0" title="0">{
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+                return
+        }</span>
+
+        // Create the user
+        <span class="cov8" title="1">user := models.User{Username: input.Username, Email: input.Email, Password: hashedPassword}
+        if result := database.DB.Create(&amp;user); result.Error != nil </span><span class="cov8" title="1">{
+                utils.Log.WithFields(logrus.Fields{
+                        "username": input.Username,
+                        "email":    input.Email,
+                        "error":    result.Error.Error(),
+                }).Error("Error creating user in the database")
+                c.JSON(http.StatusBadRequest, gin.H{"error": result.Error.Error()})
+                return
+        }</span>
+
+        <span class="cov8" title="1">utils.Log.WithFields(logrus.Fields{
+                "id":       user.ID,
+                "username": user.Username,
+                "email":    user.Email,
+        }).Info("User created successfully")
+
+        c.JSON(http.StatusOK, gin.H{"data": user})</span>
+}
+
+// Login handles user login
+func Login(c *gin.Context) <span class="cov8" title="1">{
+        var input LoginInput
+        if err := c.ShouldBindJSON(&amp;input); err != nil </span><span class="cov8" title="1">{
+                utils.Log.WithFields(logrus.Fields{
+                        "error": err.Error(),
+                }).Error("Error binding JSON in Login")
+                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }</span>
+
+        <span class="cov8" title="1">utils.Log.WithFields(logrus.Fields{
+                "email": input.Email,
+        }).Info("Attempting login")
+
+        // Find the user by email
+        var user models.User
+        if err := database.DB.Where("email = ?", input.Email).First(&amp;user).Error; err != nil </span><span class="cov8" title="1">{
+                utils.Log.WithFields(logrus.Fields{
+                        "email": input.Email,
+                }).Warn("Invalid email during login")
+                c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+                return
+        }</span>
+
+        // Check the password
+        <span class="cov8" title="1">if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil </span><span class="cov8" title="1">{
+                utils.Log.WithFields(logrus.Fields{
+                        "email": input.Email,
+                }).Warn("Invalid password during login")
+                c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+                return
+        }</span>
+
+        <span class="cov8" title="1">utils.Log.WithFields(logrus.Fields{
+                "id":    user.ID,
+                "email": user.Email,
+        }).Info("Login successful")
+
+        c.JSON(http.StatusOK, gin.H{"message": "Login successful", "user": user})</span>
+}
+
+// ListUsers retrieves all users
+func ListUsers(c *gin.Context) <span class="cov8" title="1">{
+        utils.Log.Info("Fetching all users")
+
+        var users []models.User
+        if err := database.DB.Find(&amp;users).Error; err != nil </span><span class="cov0" title="0">{
+                utils.Log.WithFields(logrus.Fields{
+                        "error": err.Error(),
+                }).Error("Failed to retrieve users from the database")
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve users"})
+                return
+        }</span>
+
+        <span class="cov8" title="1">utils.Log.WithFields(logrus.Fields{
+                "count": len(users),
+        }).Info("Users fetched successfully")
+
+        c.JSON(http.StatusOK, gin.H{"data": users})</span>
+}</pre>
+		
+		<pre class="file" id="file3" style="display: none">package utils
+
+import (
+        "os"
+
+        "github.com/sirupsen/logrus"
+)
+
+var Log *logrus.Logger
+
+func InitLogger() <span class="cov8" title="1">{
+        Log = logrus.New()
+
+        // Set the output to stdout
+        Log.Out = os.Stdout
+
+        // Set the log level (info by default)
+        Log.SetLevel(logrus.InfoLevel)
+
+        // Use JSON formatter for structured logging
+        Log.SetFormatter(&amp;logrus.JSONFormatter{})
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
