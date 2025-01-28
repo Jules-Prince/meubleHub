@@ -1,31 +1,28 @@
-# Stage 1: Build the application
 FROM golang:1.23-alpine AS builder
 
-# Install necessary build dependencies for CGO (sqlite3 needs them)
 RUN apk add --no-cache gcc musl-dev sqlite-dev
 
 WORKDIR /app
 
 COPY go.mod go.sum ./
-
 RUN go mod tidy
 
-COPY . .
+COPY ./src ./src
+COPY go.mod go.mod
+COPY go.sum go.sum
 
-# Set CGO_ENABLED=1 to enable CGO
 ENV CGO_ENABLED=1
 
-RUN go build -o main .
+RUN go test -v ./src/...
 
-# Stage 2: Create the final image
+RUN go build -o /app/main ./src
+
 FROM alpine:latest
 
 WORKDIR /root/
 
-# Copy the binary from the builder image
 COPY --from=builder /app/main .
 
-# Install the SQLite library in the runtime container
 RUN apk add --no-cache sqlite
 
 RUN mkdir -p /app/data

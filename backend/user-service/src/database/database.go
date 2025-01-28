@@ -1,14 +1,15 @@
 package database
 
 import (
-	"hexagone/room-service/models"
-	"hexagone/room-service/utils"
-	
+	"hexagone/user-service/src/models"
+	"hexagone/user-service/src/utils"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
+
 
 func ConnectDatabase(dbPath string) {
 	var err error
@@ -20,7 +21,7 @@ func ConnectDatabase(dbPath string) {
 	utils.Log.Info("Room database connected successfully!")
 
 	// Migrate the schema for Room
-	err = DB.AutoMigrate(&models.Room{})
+	err = DB.AutoMigrate(&models.User{})
 	if err != nil {
 		utils.Log.WithField("error", err.Error()).Error("Failed to connect to database")
 	}

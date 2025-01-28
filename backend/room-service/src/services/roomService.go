@@ -1,9 +1,9 @@
 package services
 
 import (
-	"hexagone/room-service/database"
-	"hexagone/room-service/models"
-	"hexagone/room-service/utils"
+	"hexagone/room-service/src/database"
+	"hexagone/room-service/src/models"
+	"hexagone/room-service/src/utils"
 	"net/http"
 	"strconv"
 

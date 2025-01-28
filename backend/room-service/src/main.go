@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"hexagone/home-service/database"
-	"hexagone/home-service/services"
-	"hexagone/home-service/utils"
+	"hexagone/room-service/src/database"
+	"hexagone/room-service/src/services"
+	"hexagone/room-service/src/utils"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -21,20 +21,19 @@ func main() {
 	if dbPath == "" {
 		utils.Log.Error("DB_PATH is not set in the environment variables")
 	}
-
-	// Initialize logger
-	utils.InitLogger()
 	
-	// Initialize database
-	database.ConnectDatabase(dbPath)
+	utils.InitLogger()
+	utils.Log.Info("Starting Object Service")
 
-	// Set up Gin router
+	// Connect to the database
+	database.ConnectDatabase(dbPath)
+	utils.Log.Info("Connected to SQLite")
+
 	r := gin.Default()
-	utils.Log.Info("Starting Home Service")
 
 	// Routes
-	r.POST("/homes", services.CreateHome)
-	r.GET("/homes", services.ListHomes)
+	r.POST("/rooms", services.CreateRoom)
+	r.GET("/rooms", services.ListRooms) 
 
 	utils.Log.Infof("Starting HTTP server on port %s", port)
 

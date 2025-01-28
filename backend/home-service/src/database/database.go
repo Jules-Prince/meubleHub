@@ -1,8 +1,8 @@
 package database
 
 import (
-	"hexagone/home-service/models"
-	"hexagone/home-service/utils"
+	"hexagone/home-service/src/models"
+	"hexagone/home-service/src/utils"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

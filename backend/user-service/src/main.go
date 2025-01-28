@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"hexagone/user-service/database"
-	"hexagone/user-service/services"
-	"hexagone/user-service/utils"
+	"hexagone/user-service/src/database"
+	"hexagone/user-service/src/services"
+	"hexagone/user-service/src/utils"
 	"os"
 
 	"github.com/gin-gonic/gin"
