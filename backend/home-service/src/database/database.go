@@ -18,7 +18,7 @@ func ConnectDatabase(dbPath string) {
 		utils.Log.WithField("error", err.Error()).Error("Failed to connect to database")
 	}
 
-	utils.Log.Info("Room database connected successfully!")
+	utils.Log.Info("Home database connected successfully!")
 
 	// Migrate the schema for Room
 	err = DB.AutoMigrate(&models.Home{})

@@ -7,6 +7,7 @@ import (
 	"hexagone/home-service/src/utils"
 	"os"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,6 +32,15 @@ func main() {
 	// Set up Gin router
 	r := gin.Default()
 	utils.Log.Info("Starting Home Service")
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5173"}, // Add your frontend URL
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
+
 
 	// Routes
 	r.POST("/homes", services.CreateHome)
