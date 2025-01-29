@@ -48,7 +48,7 @@ jobs:
         go build -v ./...
 
     - name: Build Docker Images
-      run: docker-compose build
+      run: docker compose build
 
     - name: Run Tests
       run: |
@@ -60,7 +60,7 @@ jobs:
     - name: Check Docker Compose
       run: |
         cp .env.example .env || true
-        docker-compose config
+        docker compose config
 
     - name: Report Status
       run: |
