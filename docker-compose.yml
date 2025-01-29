@@ -27,6 +27,7 @@ services:
       - "${OBJECT_PORT}:${OBJECT_PORT}"
     environment:
       - PORT=${OBJECT_PORT}
+      - USER_PORT=${USER_PORT}
       - FRONTEND_PORT=${FRONTEND_PORT}
       - DRAGONFLY_HOST=dragonfly
       - DRAGONFLY_PORT=6379
@@ -78,7 +79,7 @@ services:
       dockerfile: Dockerfile
     image: hexagon/frontend:v0.1
     ports:
-      - "${FRONTEND_PORT}:80"  # Note: changed to 80 because Nginx uses port 80
+      - "${FRONTEND_PORT}:80" # Note: changed to 80 because Nginx uses port 80
     networks:
       - app-network
     depends_on:
@@ -97,7 +98,7 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
