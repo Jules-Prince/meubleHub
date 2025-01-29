@@ -1,4 +1,4 @@
-import { Home, CreateHomeRequest, HomeResponse, ListHomesResponse } from '../types/home';
+import { CreateHomeRequest, HomeResponse, ListHomesResponse } from '../types/home';
 
 const API_URL = 'http://localhost:8081'; // Using HOME_PORT from env file
 

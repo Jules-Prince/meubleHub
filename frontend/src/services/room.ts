@@ -1,4 +1,4 @@
-import { Room, CreateRoomRequest, RoomResponse, ListRoomsResponse } from '../types/room';
+import { CreateRoomRequest, RoomResponse, ListRoomsResponse } from '../types/room';
 
 const API_URL = 'http://localhost:8082'; // Using ROOM_PORT from env file
 

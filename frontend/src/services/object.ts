@@ -1,10 +1,8 @@
 // src/services/object.ts
 import {
-    Object,
     CreateObjectRequest,
     ObjectResponse,
     ListObjectsResponse,
-    ReserveObjectRequest
 } from '../types/object';
 
 const API_URL = 'http://localhost:8080';

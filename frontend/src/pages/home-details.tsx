@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Home as HomeIcon } from 'lucide-react';
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
