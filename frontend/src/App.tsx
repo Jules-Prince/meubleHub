@@ -6,7 +6,7 @@ import Room from './pages/Room';
 import Object from './pages/Object';
 import LoginPage from './pages/Login';
 import SignUpPage from './pages/Signin';
-import HomeDetailsPage from './pages/home-details';
+import HomeRooms from './pages/Room';
 
 function App() {
   return (
@@ -21,7 +21,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Main />} />
                 <Route path="/home" element={<Home />} />
-                <Route path="/home/:id" element={<HomeDetailsPage />} />
+                <Route path="/homes/:id/rooms" element={<HomeRooms />} />
                 <Route path="/room" element={<Room />} />
                 <Route path="/object" element={<Object />} />
               </Routes>

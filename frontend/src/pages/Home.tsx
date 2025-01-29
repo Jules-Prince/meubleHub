@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Home } from '../types/home';
 import { homeService } from '../services/home';
 import { Button } from "@/components/ui/button";
@@ -19,17 +20,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus, Home as HomeIcon } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 export default function HomePage() {
+  const navigate = useNavigate(); // Add this line to get the navigate function
   const [homes, setHomes] = useState<Home[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newHomeName, setNewHomeName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-
-  const navigate = useNavigate();
 
   const fetchHomes = async () => {
     try {
@@ -131,9 +130,9 @@ export default function HomePage() {
               <Button 
                 variant="outline" 
                 className="w-full" 
-                onClick={() => navigate(`/home/${home.id}`)}
+                onClick={() => navigate(`/homes/${home.id}/rooms`)}
               >
-                View Details
+                View Rooms
               </Button>
             </CardContent>
           </Card>
