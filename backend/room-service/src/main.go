@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"hexagone/room-service/src/database"
+	"hexagone/room-service/src/middleware"
 	"hexagone/room-service/src/services"
 	"hexagone/room-service/src/utils"
 	"os"
@@ -30,6 +31,8 @@ func main() {
 	utils.Log.Info("Connected to SQLite")
 
 	r := gin.Default()
+
+	r.Use(middleware.SetupCORS())
 
 	// Routes
 	r.POST("/rooms", services.CreateRoom)

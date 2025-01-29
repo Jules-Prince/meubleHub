@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"hexagone/home-service/src/database"
+	"hexagone/home-service/src/middleware"
 	"hexagone/home-service/src/services"
 	"hexagone/home-service/src/utils"
 	"os"
@@ -31,6 +32,8 @@ func main() {
 	// Set up Gin router
 	r := gin.Default()
 	utils.Log.Info("Starting Home Service")
+
+	r.Use(middleware.SetupCORS())
 
 	// Routes
 	r.POST("/homes", services.CreateHome)
