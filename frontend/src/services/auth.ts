@@ -1,11 +1,11 @@
 // src/services/auth.ts
-import { 
-    LoginRequest, 
-    LoginResponse, 
-    CreateUserRequest, 
-    CreateUserResponse, 
+import {
+    LoginRequest,
+    LoginResponse,
+    CreateUserRequest,
+    CreateUserResponse,
     ListUsersResponse,
-    User 
+    User
 } from '../types/auth';
 
 const API_URL = 'http://localhost:8083'; // Using USER_PORT from env file
@@ -54,7 +54,7 @@ class AuthService {
             method: 'POST',
             body: JSON.stringify(credentials),
         });
-        
+
         // Store user data after successful login
         if (response.user) {
             localStorage.setItem('user', JSON.stringify(response.user));
@@ -92,6 +92,22 @@ class AuthService {
     logout(): void {
         localStorage.removeItem('user');
         localStorage.removeItem('isAuthenticated');
+    }
+
+    async getUser(userId: string | number): Promise<User> {
+        try {
+            const response = await fetch(`${API_URL}/users/${userId}`);
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to fetch user');
+            }
+
+            const data = await response.json();
+            return data.data;
+        } catch (error) {
+            throw error;
+        }
     }
 }
 

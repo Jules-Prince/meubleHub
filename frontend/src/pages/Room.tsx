@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Home as HomeIcon, ArrowLeft, Plus, DoorClosed } from 'lucide-react';
 import { Card, CardHeader, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,14 +14,14 @@ import {
 } from "@/components/ui/dialog";
 import { roomService } from '../services/room';
 import { Room } from '../types/room';
-import { Home } from '../types/home';
 
 export default function HomeRooms() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const homeId = Number(id);
+  const homeName = location.state?.homeName || 'Home';
 
-  const [home, setHome] = useState<Home | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,16 +71,16 @@ export default function HomeRooms() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
-            onClick={() => navigate('/')}
+            onClick={() => navigate(-1)}
           >
             <ArrowLeft className="h-6 w-6" />
           </Button>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <HomeIcon className="h-8 w-8" />
-            {home?.name || 'Home'} - Rooms
+            {homeName} - Rooms
           </h1>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -92,7 +92,7 @@ export default function HomeRooms() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Room</DialogTitle>
+              <DialogTitle>Add Room to {homeName}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleCreateRoom} className="space-y-4">
               <div className="space-y-2">
@@ -110,8 +110,8 @@ export default function HomeRooms() {
                   {error}
                 </div>
               )}
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full"
                 disabled={isCreating}
               >
@@ -142,10 +142,12 @@ export default function HomeRooms() {
                 </div>
               </CardHeader>
               <CardContent>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full"
-                  onClick={() => navigate(`/room/${room.id}`)}
+                  onClick={() => navigate(`/room/${room.id}`, {
+                    state: { roomName: room.name }
+                  })}
                 >
                   View Details
                 </Button>

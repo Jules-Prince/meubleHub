@@ -45,7 +45,8 @@ func main() {
 	r.POST("/users", services.CreateUser)  // Create a user
 	r.POST("/login", services.Login)       // Login
 	r.GET("/users", services.ListUsers)    // List all users
-
+    r.GET("/users/:id", services.GetUser)    // Get user by ID
+	
 	utils.Log.Infof("Starting HTTP server on port %s", port)
 
 	// Start the server

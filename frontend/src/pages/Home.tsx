@@ -130,7 +130,9 @@ export default function HomePage() {
               <Button 
                 variant="outline" 
                 className="w-full" 
-                onClick={() => navigate(`/homes/${home.id}/rooms`)}
+                onClick={() => navigate(`/homes/${home.id}/rooms`, {
+                  state: { homeName: home.name }
+                })}
               >
                 View Rooms
               </Button>

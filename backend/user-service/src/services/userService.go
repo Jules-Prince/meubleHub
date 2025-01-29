@@ -139,3 +139,28 @@ func ListUsers(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": users})
 }
+
+func GetUser(c *gin.Context) {
+    userID := c.Param("id")
+    
+    utils.Log.WithFields(logrus.Fields{
+        "userID": userID,
+    }).Info("Fetching user by ID")
+
+    var user models.User
+    if err := database.DB.First(&user, userID).Error; err != nil {
+        utils.Log.WithFields(logrus.Fields{
+            "userID": userID,
+            "error":  err.Error(),
+        }).Error("Failed to retrieve user from the database")
+        c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+        return
+    }
+
+    utils.Log.WithFields(logrus.Fields{
+        "userID":   user.ID,
+        "username": user.Username,
+    }).Info("User fetched successfully")
+
+    c.JSON(http.StatusOK, gin.H{"data": user})
+}
