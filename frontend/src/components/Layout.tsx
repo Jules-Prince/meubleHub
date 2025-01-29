@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Box, Boxes, Menu } from 'lucide-react';
+import { Home, Box, Boxes, Menu, LogOut, User } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Sheet,
@@ -8,6 +8,13 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { authService } from '../services/auth';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -17,6 +24,12 @@ const Layout = ({ children }: LayoutProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const currentUser = authService.getCurrentUser();
+
+  const handleLogout = () => {
+    authService.logout();
+    navigate('/login');
+  };
 
   const navigation = [
     { name: 'Main', href: '/', icon: Menu },
@@ -24,6 +37,23 @@ const Layout = ({ children }: LayoutProps) => {
     { name: 'Room', href: '/room', icon: Box },
     { name: 'Object', href: '/object', icon: Boxes },
   ];
+
+  const UserMenu = () => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="flex items-center gap-2">
+          <User className="h-5 w-5" />
+          <span>{currentUser?.email}</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem className="text-red-600" onClick={handleLogout}>
+          <LogOut className="h-4 w-4 mr-2" />
+          Logout
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
   const Sidebar = () => (
     <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col lg:pt-16">
@@ -86,7 +116,13 @@ const Layout = ({ children }: LayoutProps) => {
           <MobileSidebar />
           <div className="flex flex-1 items-center justify-between">
             <h1 className="text-2xl font-bold">meubleHub</h1>
-            <Button>Login</Button>
+            {currentUser ? (
+              <UserMenu />
+            ) : (
+              <Button onClick={() => navigate('/login')}>
+                Login
+              </Button>
+            )}
           </div>
         </div>
       </header>
