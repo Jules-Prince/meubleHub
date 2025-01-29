@@ -43,7 +43,12 @@ const Layout = ({ children }: LayoutProps) => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="flex items-center gap-2">
           <User className="h-5 w-5" />
-          <span>{currentUser?.email}</span>
+          <div className="flex flex-col items-start">
+            <span>{currentUser?.email}</span>
+            {currentUser?.isAdmin && (
+              <span className="text-xs text-red-500 font-semibold">Admin</span>
+            )}
+          </div>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
