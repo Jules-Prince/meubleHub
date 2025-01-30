@@ -40,6 +40,12 @@ func main() {
 	r.PATCH("/objects/:id/unreserve", services.UnreserveObject) // Unreserve an object
 	r.GET("/objects/reserved", services.ListReservedObjects) // List all reserved objects
 
+	adminRoutes := r.Group("/")
+    adminRoutes.Use(middleware.RequireAdmin())
+	adminRoutes.Use(middleware.SetupCORS())
+    {
+        adminRoutes.DELETE("/objects/:id", services.DeleteObject)
+    }
 
 	// Start the service
 	utils.Log.Infof("Starting HTTP server on port %s", port)

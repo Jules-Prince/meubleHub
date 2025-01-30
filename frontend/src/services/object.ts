@@ -4,10 +4,34 @@ import {
     ObjectResponse,
     ListObjectsResponse,
 } from '../types/object';
+import { authService } from './auth';
 
 const API_URL = 'http://localhost:8080';
 
 class ObjectService {
+    async fetchWithAuth(endpoint: string, options: RequestInit = {}): Promise<any> {
+        const currentUser = authService.getCurrentUser();
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-User-ID': currentUser?.id.toString() || '',
+            ...options.headers,
+        };
+
+        const response = await fetch(`${API_URL}${endpoint}`, {
+            ...options,
+            headers,
+        });
+
+        console.log(response)
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'An error occurred');
+        }
+
+        return response.json();
+    }
+
     async createObject(objectData: CreateObjectRequest): Promise<ObjectResponse> {
         try {
             const response = await fetch(`${API_URL}/objects`, {
@@ -102,6 +126,12 @@ class ObjectService {
         } catch (error) {
             throw error;
         }
+    }
+
+    async deleteObject(objectId: number): Promise<void> {
+        await this.fetchWithAuth(`/objects/${objectId}`, {
+            method: 'DELETE',
+        });
     }
 }
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { ArrowLeft, Plus, Package, Filter } from 'lucide-react';
+import { ArrowLeft, Plus, Package, Filter, Trash2 } from 'lucide-react';
 import { Card, CardHeader, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ import {
 import { objectService } from '../services/object';
 import { Object } from '../types/object';
 import { authService } from '../services/auth';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const objectTypes = [
   'Furniture',
@@ -49,6 +50,7 @@ export default function ObjectsPage() {
   const [newObjectType, setNewObjectType] = useState(objectTypes[0]);
   const [isCreating, setIsCreating] = useState(false);
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
+  const [objectToDelete, setObjectToDelete] = useState<number | null>(null);
 
   const fetchUserInfo = async (userId: string) => {
     try {
@@ -72,14 +74,14 @@ export default function ObjectsPage() {
         response = await objectService.listObjects();
       }
       setObjects(response.data);
-      
+
       const reservedObjects = response.data.filter(obj => obj.isReserved);
       reservedObjects.forEach(obj => {
         if (obj.reservedBy && !usernames[obj.reservedBy]) {
           fetchUserInfo(obj.reservedBy);
         }
       });
-      
+
       setError(null);
     } catch (err: any) {
       setError(err.message);
@@ -91,6 +93,18 @@ export default function ObjectsPage() {
   useEffect(() => {
     fetchObjects();
   }, []);
+
+  const handleDeleteObject = async () => {
+    if (!objectToDelete) return;
+
+    try {
+      await objectService.deleteObject(objectToDelete);
+      setObjectToDelete(null);
+      fetchObjects();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
 
   const handleCreateObject = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -247,6 +261,16 @@ export default function ObjectsPage() {
                   </div>
                   <Package className={`h-5 w-5 ${object.isReserved ? 'text-yellow-500' : 'text-gray-500'}`} />
                 </div>
+                {currentUser?.isAdmin && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => setObjectToDelete(object.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
                 {object.isReserved ? (
                   <div className="space-y-2">
                     <div className="text-sm text-yellow-600 bg-yellow-50 p-2 rounded-md">
@@ -258,7 +282,7 @@ export default function ObjectsPage() {
                         className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
                         onClick={async () => {
                           try {
-                            await objectService.unreserveObject(object.id);
+                            await objectService.unreserveObject(object.id.toString());
                             fetchObjects();
                           } catch (err: any) {
                             setError(err.message);
@@ -273,7 +297,7 @@ export default function ObjectsPage() {
                   <Button
                     variant="outline"
                     className="w-full hover:bg-yellow-50 hover:text-yellow-600 hover:border-yellow-200"
-                    onClick={() => handleReserve(object.id)}
+                    onClick={() => handleReserve(object.id.toString())}
                   >
                     Reserve
                   </Button>
@@ -283,6 +307,27 @@ export default function ObjectsPage() {
           ))}
         </div>
       )}
+
+      <AlertDialog open={!!objectToDelete} onOpenChange={(open) => !open && setObjectToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the room
+              and all its associated rooms and objects.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteObject}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {!isLoading && filteredObjects.length === 0 && (
         <div className="text-center p-8 border-2 border-dashed rounded-lg">

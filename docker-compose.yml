@@ -66,6 +66,7 @@ services:
     environment:
       - ADMIN_KEY=${ADMIN_KEY}
       - PORT=${USER_PORT}
+      - USER_PORT=${USER_PORT}
       - FRONTEND_PORT=${FRONTEND_PORT}
       - DB_PATH=${USER_DB_PATH}
     volumes:

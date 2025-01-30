@@ -72,18 +72,17 @@ export default function HomeRooms() {
   }, [homeId]);
 
   const handleDeleteRoom = async () => {
-      if (!roomToDelete) return;
-  
-      try {
-        console.log(roomToDelete)
-        await roomService.deleteRoom(roomToDelete);
-        setRoomToDelete(null);
-        fetchRooms();
-      } catch (err: any) {
-        setError(err.message);
-      }
-    };
-  
+    if (!roomToDelete) return;
+
+    try {
+      await roomService.deleteRoom(roomToDelete);
+      setRoomToDelete(null);
+      fetchRooms();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
 
   return (
     <div className="space-y-6">
