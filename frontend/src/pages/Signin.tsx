@@ -4,12 +4,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from 'lucide-react';
 import { authService } from '../services/auth';
 
 export default function SignUpPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [adminKey, setAdminKey] = useState('');
+  const [showAdminKey, setShowAdminKey] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -20,7 +24,12 @@ export default function SignUpPage() {
     setIsLoading(true);
 
     try {
-      await authService.createUser({ username, email, password });
+      await authService.createUser({ 
+        username, 
+        email, 
+        password,
+        adminKey: adminKey || undefined 
+      });
       // After successful registration, log the user in
       await authService.login({ email, password });
       navigate('/');
@@ -76,6 +85,26 @@ export default function SignUpPage() {
                   required
                 />
               </div>
+
+              <Collapsible open={showAdminKey} onOpenChange={setShowAdminKey}>
+                <CollapsibleTrigger className="flex items-center text-sm text-gray-500 hover:text-gray-700">
+                  <ChevronDown className={`h-4 w-4 mr-1 transition-transform ${showAdminKey ? 'rotate-180' : ''}`} />
+                  Admin Registration
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="space-y-2 mt-2">
+                    <Label htmlFor="adminKey">Admin Key</Label>
+                    <Input
+                      id="adminKey"
+                      type="password"
+                      placeholder="Enter admin key"
+                      value={adminKey}
+                      onChange={(e) => setAdminKey(e.target.value)}
+                    />
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
               {error && (
                 <div className="text-red-500 text-sm">
                   {error}

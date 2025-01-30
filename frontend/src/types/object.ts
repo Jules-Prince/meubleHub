@@ -1,5 +1,5 @@
 export interface Object {
-  id: string;
+  id: number;
   name: string;
   type: string;
   isReserved: boolean;

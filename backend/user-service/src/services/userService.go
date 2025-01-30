@@ -5,6 +5,7 @@ import (
 	"hexagone/user-service/src/models"
 	"hexagone/user-service/src/utils"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -15,6 +16,7 @@ type CreateUserInput struct {
 	Username string `json:"username" binding:"required"`
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
+	AdminKey string `json:"adminKey"`
 }
 
 type LoginInput struct {
@@ -50,6 +52,14 @@ func CreateUser(c *gin.Context) {
 		"email":    input.Email,
 	}).Info("Creating user")
 
+	// Check for admin creation
+	isAdmin := false
+	adminKey := os.Getenv("ADMIN_KEY")
+	if adminKey != "" && input.AdminKey == adminKey {
+		isAdmin = true
+		utils.Log.Info("Creating admin user")
+	}
+
 	// Hash the password
 	hashedPassword, err := HashPassword(input.Password)
 	if err != nil {
@@ -58,7 +68,13 @@ func CreateUser(c *gin.Context) {
 	}
 
 	// Create the user
-	user := models.User{Username: input.Username, Email: input.Email, Password: hashedPassword}
+	user := models.User{
+		Username: input.Username, 
+		Email: input.Email, 
+		Password: hashedPassword,
+		IsAdmin: isAdmin,
+	}
+	
 	if result := database.DB.Create(&user); result.Error != nil {
 		utils.Log.WithFields(logrus.Fields{
 			"username": input.Username,
@@ -73,10 +89,14 @@ func CreateUser(c *gin.Context) {
 		"id":       user.ID,
 		"username": user.Username,
 		"email":    user.Email,
+		"isAdmin":  user.IsAdmin,
 	}).Info("User created successfully")
 
+	// Remove password from response
+	user.Password = ""
 	c.JSON(http.StatusOK, gin.H{"data": user})
 }
+
 
 // Login handles user login
 func Login(c *gin.Context) {
@@ -112,13 +132,23 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	// Create a safe user copy without password
+	safeUser := models.User{
+		ID:       user.ID,
+		Username: user.Username,
+		Email:    user.Email,
+		IsAdmin:  user.IsAdmin,
+	}
+
 	utils.Log.WithFields(logrus.Fields{
-		"id":    user.ID,
-		"email": user.Email,
+		"id":      user.ID,
+		"email":   user.Email,
+		"isAdmin": user.IsAdmin,
 	}).Info("Login successful")
 
-	c.JSON(http.StatusOK, gin.H{"message": "Login successful", "user": user})
+	c.JSON(http.StatusOK, gin.H{"message": "Login successful", "user": safeUser})
 }
+
 
 // ListUsers retrieves all users
 func ListUsers(c *gin.Context) {

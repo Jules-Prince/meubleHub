@@ -39,6 +39,14 @@ func main() {
 	r.POST("/homes", services.CreateHome)
 	r.GET("/homes", services.ListHomes)
 
+	adminRoutes := r.Group("/")
+    adminRoutes.Use(middleware.RequireAdmin())
+	adminRoutes.Use(middleware.SetupCORS())
+    {
+        adminRoutes.DELETE("/homes/:id", services.DeleteHome)
+    }
+
+
 	utils.Log.Infof("Starting HTTP server on port %s", port)
 
 	// Start the server
