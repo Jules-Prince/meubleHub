@@ -27,7 +27,7 @@ class HomeService {
 
   async deleteHome(homeId: number): Promise<void> {
     await this.fetchWithAuth(`/homes/${homeId}`, {
-      method: 'DELETE',
+      method: 'DELETE'
     });
   }
 

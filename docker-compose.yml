@@ -47,6 +47,7 @@ services:
       - "${ROOM_PORT}:${ROOM_PORT}"
     environment:
       - PORT=${ROOM_PORT}
+      - USER_PORT=${USER_PORT}
       - FRONTEND_PORT=${FRONTEND_PORT}
       - DB_PATH=${ROOM_DB_PATH}
     volumes:
