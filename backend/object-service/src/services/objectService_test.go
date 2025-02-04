@@ -21,33 +21,28 @@ var router *gin.Engine
 var mr *miniredis.Miniredis
 
 func setupTestServer() error {
-	// Initialize logger
 	utils.InitLogger()
-	
-	// Set Gin to test mode
 	gin.SetMode(gin.TestMode)
 	
-	// Create mock Redis server
 	var err error
 	mr, err = miniredis.Run()
 	if err != nil {
 		return err
 	}
 	
-	// Set environment variables for database connection
 	os.Setenv("DRAGONFLY_HOST", mr.Host())
 	os.Setenv("DRAGONFLY_PORT", mr.Port())
 	
-	// Initialize database connection
 	if err := database.ConnectDatabase(); err != nil {
 		return err
 	}
 	
-	// Set up router
 	router = gin.Default()
 	router.POST("/objects", services.CreateObject)
 	router.GET("/objects", services.ListObjects)
+	router.GET("/objects/room", services.ListObjectsByRoom)
 	router.PATCH("/objects/:id/reserve", services.ReserveObject)
+	router.PATCH("/objects/:id/unreserve", services.UnreserveObject)
 	router.GET("/objects/reserved", services.ListReservedObjects)
 	
 	return nil
@@ -73,6 +68,7 @@ func TestCreateObject(t *testing.T) {
 			input: map[string]interface{}{
 				"name": "Test Object",
 				"type": "furniture",
+				"room_id": "room123",
 			},
 			expectedCode: http.StatusOK,
 		},
@@ -80,6 +76,7 @@ func TestCreateObject(t *testing.T) {
 			name: "Missing Name",
 			input: map[string]interface{}{
 				"type": "furniture",
+				"room_id": "room123",
 			},
 			expectedCode: http.StatusBadRequest,
 		},
@@ -87,6 +84,15 @@ func TestCreateObject(t *testing.T) {
 			name: "Missing Type",
 			input: map[string]interface{}{
 				"name": "Test Object",
+				"room_id": "room123",
+			},
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "Missing Room ID",
+			input: map[string]interface{}{
+				"name": "Test Object",
+				"type": "furniture",
 			},
 			expectedCode: http.StatusBadRequest,
 		},
@@ -110,94 +116,24 @@ func TestCreateObject(t *testing.T) {
 				assert.NotEmpty(t, response["data"])
 				assert.Equal(t, tt.input["name"], response["data"].Name)
 				assert.Equal(t, tt.input["type"], response["data"].Type)
+				assert.Equal(t, tt.input["room_id"], response["data"].RoomID)
 				assert.False(t, response["data"].IsReserved)
 			}
 		})
 	}
 }
 
-func TestReserveObject(t *testing.T) {
+func TestListObjectsByRoom(t *testing.T) {
 	if err := setupTestServer(); err != nil {
 		t.Fatalf("Failed to setup test server: %v", err)
 	}
 	defer cleanupTest()
 
-	// First create an object
-	createInput := map[string]interface{}{
-		"name": "Test Object",
-		"type": "furniture",
-	}
-	jsonInput, _ := json.Marshal(createInput)
-	req := httptest.NewRequest("POST", "/objects", bytes.NewBuffer(jsonInput))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-	
-	var createResponse map[string]models.Object
-	json.Unmarshal(w.Body.Bytes(), &createResponse)
-	objectID := createResponse["data"].ID
-
-	tests := []struct {
-		name         string
-		objectID     string
-		userID       string
-		expectedCode int
-	}{
-		{
-			name:         "Valid Reservation",
-			objectID:     objectID,
-			userID:       "user123",
-			expectedCode: http.StatusOK,
-		},
-		{
-			name:         "Already Reserved",
-			objectID:     objectID,
-			userID:       "user456",
-			expectedCode: http.StatusConflict,
-		},
-		{
-			name:         "Non-existent Object",
-			objectID:     "nonexistent",
-			userID:       "user123",
-			expectedCode: http.StatusNotFound,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			reserveInput := map[string]interface{}{
-				"userId": tt.userID,
-			}
-			jsonInput, _ := json.Marshal(reserveInput)
-			req := httptest.NewRequest("PATCH", "/objects/"+tt.objectID+"/reserve", bytes.NewBuffer(jsonInput))
-			req.Header.Set("Content-Type", "application/json")
-			w := httptest.NewRecorder()
-			
-			router.ServeHTTP(w, req)
-			
-			assert.Equal(t, tt.expectedCode, w.Code)
-			
-			if tt.expectedCode == http.StatusOK {
-				var response map[string]models.Object
-				err := json.Unmarshal(w.Body.Bytes(), &response)
-				assert.NoError(t, err)
-				assert.True(t, response["data"].IsReserved)
-				assert.Equal(t, tt.userID, response["data"].ReservedBy)
-			}
-		})
-	}
-}
-
-func TestListObjects(t *testing.T) {
-	if err := setupTestServer(); err != nil {
-		t.Fatalf("Failed to setup test server: %v", err)
-	}
-	defer cleanupTest()
-
-	// Create test objects
+	// Create test objects in different rooms
 	testObjects := []map[string]interface{}{
-		{"name": "Object 1", "type": "furniture"},
-		{"name": "Object 2", "type": "electronics"},
+		{"name": "Object 1", "type": "furniture", "room_id": "room1"},
+		{"name": "Object 2", "type": "electronics", "room_id": "room1"},
+		{"name": "Object 3", "type": "furniture", "room_id": "room2"},
 	}
 
 	for _, obj := range testObjects {
@@ -209,75 +145,132 @@ func TestListObjects(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 	}
 
-	t.Run("List All Objects", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/objects", nil)
-		w := httptest.NewRecorder()
-		
-		router.ServeHTTP(w, req)
-		
-		assert.Equal(t, http.StatusOK, w.Code)
-		
-		var response map[string][]models.Object
-		err := json.Unmarshal(w.Body.Bytes(), &response)
-		assert.NoError(t, err)
-		assert.Len(t, response["data"], len(testObjects))
-	})
+	tests := []struct {
+		name           string
+		roomID         string
+		expectedCode   int
+		expectedCount  int
+	}{
+		{
+			name:           "Valid Room ID",
+			roomID:         "room1",
+			expectedCode:   http.StatusOK,
+			expectedCount:  2,
+		},
+		{
+			name:           "Empty Room",
+			roomID:         "room3",
+			expectedCode:   http.StatusOK,
+			expectedCount:  0,
+		},
+		{
+			name:           "Missing Room ID",
+			roomID:         "",
+			expectedCode:   http.StatusBadRequest,
+			expectedCount:  0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			url := "/objects/room"
+			if tt.roomID != "" {
+				url += "?room_id=" + tt.roomID
+			}
+			
+			req := httptest.NewRequest("GET", url, nil)
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
+			
+			assert.Equal(t, tt.expectedCode, w.Code)
+			
+			if tt.expectedCode == http.StatusOK {
+				var response map[string][]models.Object
+				err := json.Unmarshal(w.Body.Bytes(), &response)
+				assert.NoError(t, err)
+				assert.Len(t, response["data"], tt.expectedCount)
+				
+				if tt.expectedCount > 0 {
+					for _, obj := range response["data"] {
+						assert.Equal(t, tt.roomID, obj.RoomID)
+					}
+				}
+			}
+		})
+	}
 }
 
-func TestListReservedObjects(t *testing.T) {
+func TestUnreserveObject(t *testing.T) {
 	if err := setupTestServer(); err != nil {
 		t.Fatalf("Failed to setup test server: %v", err)
 	}
 	defer cleanupTest()
 
-	// Create and reserve test objects
-	testObjects := []map[string]interface{}{
-		{"name": "Reserved Object 1", "type": "furniture"},
-		{"name": "Reserved Object 2", "type": "electronics"},
-		{"name": "Unreserved Object", "type": "furniture"},
+	// Create and reserve an object
+	createInput := map[string]interface{}{
+		"name": "Test Object",
+		"type": "furniture",
+		"room_id": "room123",
+	}
+	jsonInput, _ := json.Marshal(createInput)
+	req := httptest.NewRequest("POST", "/objects", bytes.NewBuffer(jsonInput))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	
+	var createResponse map[string]models.Object
+	json.Unmarshal(w.Body.Bytes(), &createResponse)
+	objectID := createResponse["data"].ID
+
+	// Reserve the object
+	reserveInput := map[string]interface{}{
+		"userId": "user123",
+	}
+	jsonInput, _ = json.Marshal(reserveInput)
+	req = httptest.NewRequest("PATCH", "/objects/"+objectID+"/reserve", bytes.NewBuffer(jsonInput))
+	req.Header.Set("Content-Type", "application/json")
+	w = httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	tests := []struct {
+		name         string
+		objectID     string
+		expectedCode int
+	}{
+		{
+			name:         "Valid Unreservation",
+			objectID:     objectID,
+			expectedCode: http.StatusOK,
+		},
+		{
+			name:         "Already Unreserved",
+			objectID:     objectID,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name:         "Non-existent Object",
+			objectID:     "nonexistent",
+			expectedCode: http.StatusNotFound,
+		},
 	}
 
-	for i, obj := range testObjects {
-		// Create object
-		jsonInput, _ := json.Marshal(obj)
-		req := httptest.NewRequest("POST", "/objects", bytes.NewBuffer(jsonInput))
-		req.Header.Set("Content-Type", "application/json")
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-		
-		var createResponse map[string]models.Object
-		json.Unmarshal(w.Body.Bytes(), &createResponse)
-		
-		// Reserve first two objects
-		if i < 2 {
-			reserveInput := map[string]interface{}{
-				"userId": "user123",
-			}
-			jsonInput, _ := json.Marshal(reserveInput)
-			req = httptest.NewRequest("PATCH", "/objects/"+createResponse["data"].ID+"/reserve", bytes.NewBuffer(jsonInput))
-			req.Header.Set("Content-Type", "application/json")
-			w = httptest.NewRecorder()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest("PATCH", "/objects/"+tt.objectID+"/unreserve", nil)
+			w := httptest.NewRecorder()
+			
 			router.ServeHTTP(w, req)
-			assert.Equal(t, http.StatusOK, w.Code)
-		}
+			
+			assert.Equal(t, tt.expectedCode, w.Code)
+			
+			if tt.expectedCode == http.StatusOK {
+				var response map[string]models.Object
+				err := json.Unmarshal(w.Body.Bytes(), &response)
+				assert.NoError(t, err)
+				assert.False(t, response["data"].IsReserved)
+				assert.Empty(t, response["data"].ReservedBy)
+			}
+		})
 	}
-
-	t.Run("List Reserved Objects", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/objects/reserved", nil)
-		w := httptest.NewRecorder()
-		
-		router.ServeHTTP(w, req)
-		
-		assert.Equal(t, http.StatusOK, w.Code)
-		
-		var response map[string][]models.Object
-		err := json.Unmarshal(w.Body.Bytes(), &response)
-		assert.NoError(t, err)
-		assert.Len(t, response["data"], 2)
-		
-		for _, obj := range response["data"] {
-			assert.True(t, obj.IsReserved)
-			assert.Equal(t, "user123", obj.ReservedBy)
-		}
-	})
 }

@@ -50,6 +50,32 @@ func CreateRoom(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": room})
 }
 
+func DeleteRoom(c *gin.Context) {
+    roomId := c.Param("id")
+    
+    utils.Log.WithField("roomId", roomId).Info("Attempting to delete room")
+
+    // Delete the home
+    result := database.DB.Delete(&models.Room{}, roomId)
+    if result.Error != nil {
+        utils.Log.WithFields(logrus.Fields{
+            "roomId": roomId,
+            "error":  result.Error.Error(),
+        }).Error("Failed to delete room")
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete room"})
+        return
+    }
+
+    if result.RowsAffected == 0 {
+        utils.Log.WithField("roomId", roomId).Warn("Room not found")
+        c.JSON(http.StatusNotFound, gin.H{"error": "Room not found"})
+        return
+    }
+
+    utils.Log.WithField("roomId", roomId).Info("Room deleted successfully")
+    c.JSON(http.StatusOK, gin.H{"message": "Room deleted successfully"})
+}
+
 // ListRooms handles fetching all rooms for a specific home
 func ListRooms(c *gin.Context) {
 	homeIDStr := c.DefaultQuery("home_id", "")

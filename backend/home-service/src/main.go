@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"hexagone/home-service/src/database"
+	"hexagone/home-service/src/middleware"
 	"hexagone/home-service/src/services"
 	"hexagone/home-service/src/utils"
 	"os"
@@ -32,9 +33,19 @@ func main() {
 	r := gin.Default()
 	utils.Log.Info("Starting Home Service")
 
+	r.Use(middleware.SetupCORS())
+
 	// Routes
 	r.POST("/homes", services.CreateHome)
 	r.GET("/homes", services.ListHomes)
+
+	adminRoutes := r.Group("/")
+    adminRoutes.Use(middleware.RequireAdmin())
+	adminRoutes.Use(middleware.SetupCORS())
+    {
+        adminRoutes.DELETE("/homes/:id", services.DeleteHome)
+    }
+
 
 	utils.Log.Infof("Starting HTTP server on port %s", port)
 

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"hexagone/object-service/src/database"
+	"hexagone/object-service/src/middleware"
 	"hexagone/object-service/src/services"
 	"hexagone/object-service/src/utils"
 	"os"
@@ -29,12 +30,22 @@ func main() {
 
 	r := gin.Default()
 
+	r.Use(middleware.SetupCORS())
+
 	// Object routes
 	r.POST("/objects", services.CreateObject)               // Add a new object
 	r.GET("/objects", services.ListObjects)                 // List all objects
+	r.GET("/objects/:roomId", services.ListObjectsByRoom)    // List object by their room id
 	r.PATCH("/objects/:id/reserve", services.ReserveObject) // Reserve an object
+	r.PATCH("/objects/:id/unreserve", services.UnreserveObject) // Unreserve an object
 	r.GET("/objects/reserved", services.ListReservedObjects) // List all reserved objects
 
+	adminRoutes := r.Group("/")
+    adminRoutes.Use(middleware.RequireAdmin())
+	adminRoutes.Use(middleware.SetupCORS())
+    {
+        adminRoutes.DELETE("/objects/:id", services.DeleteObject)
+    }
 
 	// Start the service
 	utils.Log.Infof("Starting HTTP server on port %s", port)

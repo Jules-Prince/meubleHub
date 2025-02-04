@@ -47,6 +47,32 @@ func CreateHome(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": home})
 }
 
+func DeleteHome(c *gin.Context) {
+    homeID := c.Param("id")
+    
+    utils.Log.WithField("homeID", homeID).Info("Attempting to delete home")
+
+    // Delete the home
+    result := database.DB.Delete(&models.Home{}, homeID)
+    if result.Error != nil {
+        utils.Log.WithFields(logrus.Fields{
+            "homeID": homeID,
+            "error":  result.Error.Error(),
+        }).Error("Failed to delete home")
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete home"})
+        return
+    }
+
+    if result.RowsAffected == 0 {
+        utils.Log.WithField("homeID", homeID).Warn("Home not found")
+        c.JSON(http.StatusNotFound, gin.H{"error": "Home not found"})
+        return
+    }
+
+    utils.Log.WithField("homeID", homeID).Info("Home deleted successfully")
+    c.JSON(http.StatusOK, gin.H{"message": "Home deleted successfully"})
+}
+
 // ListHomes handles fetching all homes
 func ListHomes(c *gin.Context) {
 	utils.Log.Info("Fetching all homes")

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"hexagone/room-service/src/database"
+	"hexagone/room-service/src/middleware"
 	"hexagone/room-service/src/services"
 	"hexagone/room-service/src/utils"
 	"os"
@@ -31,9 +32,18 @@ func main() {
 
 	r := gin.Default()
 
+	r.Use(middleware.SetupCORS())
+
 	// Routes
 	r.POST("/rooms", services.CreateRoom)
 	r.GET("/rooms", services.ListRooms) 
+
+	adminRoutes := r.Group("/")
+    adminRoutes.Use(middleware.RequireAdmin())
+	adminRoutes.Use(middleware.SetupCORS())
+    {
+        adminRoutes.DELETE("/rooms/:id", services.DeleteRoom)
+    }
 
 	utils.Log.Infof("Starting HTTP server on port %s", port)
 
